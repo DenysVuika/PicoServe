@@ -1,8 +1,12 @@
 import express, { Express, Request, Response } from 'express';
+import cors from 'cors';
 import path from 'path';
 
 const app: Express = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
+
+// Enable CORS with unrestricted access for development
+app.use(cors());
 
 // Get static files directory from command line args or environment variable, default to 'public'
 const staticDir = process.argv[2] || process.env.STATIC_DIR || 'public';
