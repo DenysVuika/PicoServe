@@ -153,6 +153,13 @@ The endpoint will be automatically discovered and registered on server startup!
 - `/bff/hello` - Simple greeting endpoint
 - `/api/example` - Example CRUD endpoints with parameters
 
+### Production Notes
+
+The plugin system works seamlessly in production:
+- When you run `npm run build`, all TypeScript files (including plugins) are compiled to JavaScript in the `dist/` directory
+- The loader automatically detects the environment and loads `.js` files in production, `.ts` files in development
+- Simply deploy the `dist/` directory with your plugins included
+
 For detailed documentation on creating plugins, see [src/api/README.md](src/api/README.md).
 
 ## Adding Static Files

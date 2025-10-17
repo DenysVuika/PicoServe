@@ -14,14 +14,23 @@ export async function loadApiPlugins(app: Express, apiDir: string): Promise<void
     const files = readdirSync(apiDir);
     const plugins: PluginMetadata[] = [];
 
+    // In production (compiled), only .js files exist
+    // In development (ts-node), only .ts files exist
+    const isProduction = files.some(f => f.endsWith('.js'));
+
     for (const file of files) {
       // Skip non-JS/TS files and type definition files
       if (!file.endsWith('.js') && !file.endsWith('.ts')) continue;
       if (file.endsWith('.d.ts')) continue;
       
+      // Skip .ts files in production and .js files in development
+      if (isProduction && file.endsWith('.ts')) continue;
+      if (!isProduction && file.endsWith('.js')) continue;
+      
       // Skip the loader and types files
       if (file === 'loader.ts' || file === 'loader.js' || 
-          file === 'types.ts' || file === 'types.js') continue;
+          file === 'types.ts' || file === 'types.js' ||
+          file === 'types.d.ts') continue;
 
       const pluginPath = join(apiDir, file);
       

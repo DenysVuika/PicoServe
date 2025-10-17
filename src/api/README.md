@@ -96,10 +96,48 @@ export default async function (app: Express) {
 }
 ```
 
+## Production Deployment
+
+The plugin system works seamlessly in both development and production:
+
+### Development (with ts-node)
+```bash
+npm run dev
+```
+- Loads `.ts` files directly from `src/api/`
+- Hot reload with `--watch` flag
+
+### Production (compiled)
+```bash
+npm run build
+npm start
+```
+- TypeScript compiles all files to `dist/api/` as `.js` files
+- The loader automatically detects the environment and loads `.js` files in production
+- The entire `dist/` directory structure mirrors `src/`, so plugins work identically
+
+### What Gets Deployed
+
+After running `npm run build`, your production structure will be:
+
+```
+dist/
+├── server.js
+└── api/
+    ├── loader.js
+    ├── types.js
+    ├── hello.js
+    ├── example.js
+    └── (any custom plugins you added)
+```
+
+Just deploy the `dist/` directory along with `node_modules/` and `package.json`.
+
 ## Notes
 
 - Plugins are loaded in alphabetical order by filename
 - The `loader.ts` and `types.ts` files are automatically skipped
+- The loader automatically detects whether to load `.ts` (dev) or `.js` (production) files
 - Make sure to handle errors within your endpoints
 - Use appropriate HTTP methods (GET, POST, PUT, DELETE, etc.)
 - Consider adding request validation for production use
