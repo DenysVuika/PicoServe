@@ -100,14 +100,97 @@ export default function (app: Express, config: PluginConfig) {
       continue;
     }
 
+    // Check if target still has unresolved env variables
+    if (proxy.target.includes("${")) {
+      console.error(
+        `    ✗ Skipping proxy ${proxy.path}: unresolved environment variable in target: ${proxy.target}`
+      );
+      continue;
+    }
+
     try {
+      // Store custom callbacks from user config if they exist
+      const customOptions = proxy.options as any;
+      const customOnProxyReq = customOptions?.onProxyReq;
+      const customOnProxyRes = customOptions?.onProxyRes;
+      const customOnError = customOptions?.onError;
+
       const proxyOptions = {
         target: proxy.target,
         changeOrigin: true, // Default to true for most use cases
         ...proxy.options,
+        // Override with logging callbacks that also call custom ones
+        on: {
+          proxyReq: (proxyReq: any, req: any, res: any) => {
+            const targetUrl = `${proxy.target}${proxyReq.path}`;
+            const originalUrl = req.originalUrl || req.url;
+            
+            // Log request
+            console.log(`[Proxy Request] ${req.method} ${originalUrl} → ${targetUrl}`);
+            
+            // Log auth-related headers if present
+            if (req.headers.authorization) {
+              console.log(`[Proxy Request] Authorization: ${req.headers.authorization.substring(0, 20)}...`);
+            }
+            if (req.headers.cookie) {
+              console.log(`[Proxy Request] Cookie: ${req.headers.cookie.substring(0, 50)}...`);
+            }
+            
+            // Forward auth headers or cookies
+            if (req.headers.cookie) {
+              proxyReq.setHeader("cookie", req.headers.cookie);
+            }
+            if (req.headers.authorization) {
+              proxyReq.setHeader("authorization", req.headers.authorization);
+            }
+            
+            // Call custom callback if provided
+            if (customOnProxyReq) {
+              customOnProxyReq(proxyReq, req, res);
+            }
+          },
+          proxyRes: (proxyRes: any, req: any, res: any) => {
+            const originalUrl = req.originalUrl || req.url;
+            console.log(`[Proxy Response] ${req.method} ${originalUrl} ← ${proxyRes.statusCode} ${proxyRes.statusMessage || ''}`);
+            
+            // Call custom callback if provided
+            if (customOnProxyRes) {
+              customOnProxyRes(proxyRes, req, res);
+            }
+          },
+          error: (err: any, req: any, res: any) => {
+            const originalUrl = req.originalUrl || req.url;
+            console.error(`[Proxy Error] ${req.method} ${originalUrl}:`, err.message);
+            console.error(`[Proxy Error] Target: ${proxy.target}`);
+            console.error(`[Proxy Error] Code: ${err.code}`);
+            
+            // Call custom callback if provided, otherwise send default error response
+            if (customOnError) {
+              customOnError(err, req, res);
+            } else if (!res.headersSent) {
+              res.status(502).json({
+                error: "Proxy Error",
+                message: `Failed to connect to ${proxy.target}`,
+                details: err.message,
+                code: err.code,
+                path: req.url
+              });
+            }
+          },
+        },
       };
 
-      app.use(proxy.path, createProxyMiddleware(proxyOptions));
+      // Use filter function to match the path
+      const filterOptions = {
+        ...proxyOptions,
+        pathFilter: (pathname: string) => {
+          return pathname.startsWith(proxy.path);
+        }
+      };
+      
+      const middleware = createProxyMiddleware(filterOptions);
+      app.use(middleware);
+      
       console.log(`      ✓ ${proxy.path} → ${proxy.target}`);
     } catch (error) {
       console.error(`      ✗ Failed to set up proxy for ${proxy.path}:`, error);

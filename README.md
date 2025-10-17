@@ -43,7 +43,7 @@ npm run build
 npm start
 ```
 
-The server will start on `http://localhost:3000` by default.
+The server will start on `http://localhost:4200` by default.
 
 ### Configuration
 
