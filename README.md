@@ -127,18 +127,21 @@ app.use(cors({
 ```
 PicoServe/
 ├── src/
-│   ├── server.ts       # Main server file
-│   └── api/            # API plugins directory
-│       ├── loader.ts   # Plugin loader
-│       ├── types.ts    # Plugin type definitions
-│       ├── hello.ts    # Example plugin
-│       ├── example.ts  # Example plugin with multiple endpoints
-│       └── README.md   # API plugin documentation
-├── public/             # Static files directory
-│   └── index.html      # Sample HTML file
-├── dist/               # Compiled JavaScript (generated)
-├── tsconfig.json       # TypeScript configuration
-└── package.json        # Project dependencies
+│   ├── server.ts        # Main server file
+│   └── api/             # API plugins directory
+│       ├── loader.ts    # Plugin loader
+│       ├── types.ts     # Plugin type definitions
+│       ├── proxy.ts     # Proxy configuration plugin
+│       ├── app.config.ts # App configuration plugin
+│       ├── hello.ts     # Example plugin
+│       ├── example.ts   # Example plugin with multiple endpoints
+│       └── README.md    # API plugin documentation
+├── public/              # Static files directory
+│   ├── index.html       # Sample HTML file
+│   └── proxy.config.json # Proxy configuration (optional)
+├── dist/                # Compiled JavaScript (generated)
+├── tsconfig.json        # TypeScript configuration
+└── package.json         # Project dependencies
 ```
 
 ## Endpoints
@@ -247,7 +250,9 @@ PicoServe includes built-in support for proxying requests to external services. 
 }
 ```
 
-2. Use environment variables for flexible configuration:
+2. Start the server - proxies are automatically configured and all proxy activity is logged!
+
+3. Use environment variables for flexible configuration:
 
 ```json
 {
@@ -269,7 +274,30 @@ Set the environment variables in your `.env` file:
 BACKEND_URL=https://api.example.com
 ```
 
-3. Start the server - proxies are automatically configured!
+4. Start the server - proxies are automatically configured!
+
+#### Proxy Logging
+
+All proxy requests and responses are automatically logged to the console:
+
+```
+[Proxy Request] GET /api/users → https://backend.example.com/api/users
+[Proxy Request] Authorization: Bearer eyJhbGciOiJIUzI...
+[Proxy Response] GET /api/users ← 200 OK
+```
+
+This helps you:
+- Debug proxy configuration issues
+- Monitor API calls to backend services
+- Track authentication headers being forwarded
+- Identify failed requests and error codes
+
+Error logging includes detailed information:
+```
+[Proxy Error] GET /api/users: ECONNREFUSED
+[Proxy Error] Target: https://backend.example.com
+[Proxy Error] Code: ECONNREFUSED
+```
 
 #### Example: Development Setup
 

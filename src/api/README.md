@@ -329,6 +329,44 @@ Example with advanced options:
 2. The proxy plugin loads automatically on server startup
 3. Proxies are registered **before** static files and other API routes
 4. Requests matching the proxy paths are forwarded to the target servers
+5. All proxy activity is automatically logged to the console for debugging
+
+#### Proxy Logging
+
+The proxy plugin automatically logs all requests, responses, and errors:
+
+**Request Logging:**
+```
+[Proxy Request] GET /api/users → https://backend.example.com/api/users
+```
+
+**Authentication Headers:**
+When authorization headers or cookies are present, they are logged (truncated for security):
+```
+[Proxy Request] Authorization: Bearer eyJhbGciOiJIUzI...
+[Proxy Request] Cookie: session=abc123def456...
+```
+
+**Response Logging:**
+```
+[Proxy Response] GET /api/users ← 200 OK
+[Proxy Response] POST /api/users ← 201 Created
+```
+
+**Error Logging:**
+Detailed error information helps diagnose connection issues:
+```
+[Proxy Error] GET /api/users: ECONNREFUSED
+[Proxy Error] Target: https://backend.example.com
+[Proxy Error] Code: ECONNREFUSED
+```
+
+**Benefits:**
+- Debug proxy configuration and routing issues
+- Monitor API calls in real-time
+- Verify authentication headers are being forwarded
+- Track response status codes
+- Identify connection errors quickly
 
 #### Example Use Cases
 
