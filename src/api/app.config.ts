@@ -4,6 +4,23 @@ import { readFileSync, existsSync } from "fs";
 import { join } from "path";
 
 /**
+ * Substitutes environment variables in a string
+ * Replaces ${VAR_NAME} with process.env.VAR_NAME
+ * @param content - The string content to process
+ * @returns The content with substituted environment variables
+ */
+function substituteEnvVariables(content: string): string {
+  return content.replace(/\$\{([^}]+)\}/g, (match, varName) => {
+    const envValue = process.env[varName];
+    if (envValue === undefined) {
+      console.warn(`Environment variable ${varName} is not defined, keeping placeholder`);
+      return match;
+    }
+    return envValue;
+  });
+}
+
+/**
  * App Config API plugin
  * Serves app.config.json from static directory if it exists,
  * otherwise provides a default demo configuration
@@ -16,7 +33,9 @@ export default function (app: Express, config: PluginConfig) {
     if (existsSync(configPath)) {
       try {
         const fileContent = readFileSync(configPath, "utf-8");
-        const configData = JSON.parse(fileContent);
+        // Substitute environment variables before parsing JSON
+        const substitutedContent = substituteEnvVariables(fileContent);
+        const configData = JSON.parse(substitutedContent);
         res.json(configData);
         return;
       } catch (error) {
