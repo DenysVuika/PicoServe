@@ -4,8 +4,14 @@ import path from 'path';
 const app: Express = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
 
-// Serve static files from the 'public' directory
-app.use(express.static(path.join(__dirname, '../public')));
+// Get static files directory from command line args or environment variable, default to 'public'
+const staticDir = process.argv[2] || process.env.STATIC_DIR || 'public';
+const staticPath = path.isAbsolute(staticDir) 
+  ? staticDir 
+  : path.join(__dirname, '..', staticDir);
+
+// Serve static files from the specified directory
+app.use(express.static(staticPath));
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
@@ -15,7 +21,7 @@ app.get('/health', (req: Request, res: Response) => {
 // Start the server
 const server = app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
-  console.log(`Serving static files from: ${path.join(__dirname, '../public')}`);
+  console.log(`Serving static files from: ${staticDir}`);
 });
 
 server.on('error', (err: NodeJS.ErrnoException) => {
