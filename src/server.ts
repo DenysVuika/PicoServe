@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import path from 'path';

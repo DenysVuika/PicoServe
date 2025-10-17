@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "TypeScript-based Node.js and Express.js server for serving static files",
   "main": "dist/server.js",
+  "bin": {
+    "psrv": "dist/server.js"
+  },
   "scripts": {
     "build": "tsc",
     "start": "node --env-file=.env dist/server.js",
