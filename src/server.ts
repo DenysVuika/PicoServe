@@ -19,8 +19,15 @@ const limiter = rateLimit({
 // Apply rate limiter to all requests
 app.use(limiter);
 
-// Enable CORS with unrestricted access for development
-app.use(cors());
+// Enable CORS with credentials support for development
+app.use(cors({
+  origin: true, // Reflects the request origin (allows any origin in dev)
+  credentials: true, // Allow cookies and authorization headers
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 600 // Cache preflight requests for 10 minutes
+}));
 
 // Parse JSON bodies
 app.use(express.json());

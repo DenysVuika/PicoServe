@@ -223,6 +223,172 @@ dist/
 
 Just deploy the `dist/` directory along with `node_modules/` and `package.json`.
 
+## Built-in Plugins
+
+### Proxy Configuration Plugin
+
+The proxy plugin (`proxy.ts`) enables you to configure reverse proxies for your application. This is particularly useful for:
+- Proxying authentication requests to an OIDC provider
+- Forwarding API requests to backend services
+- Avoiding CORS issues in development
+- Routing requests to microservices
+
+#### Configuration
+
+Create a `proxy.config.json` file in your static directory with the following structure:
+
+```json
+{
+  "proxies": [
+    {
+      "path": "/auth",
+      "target": "https://your-oidc-provider.com",
+      "options": {
+        "changeOrigin": true
+      }
+    },
+    {
+      "path": "/api",
+      "target": "https://your-backend.com",
+      "options": {
+        "changeOrigin": true,
+        "pathRewrite": {
+          "^/api": ""
+        }
+      }
+    }
+  ]
+}
+```
+
+#### Environment Variables
+
+You can use environment variables in your proxy configuration:
+
+```json
+{
+  "proxies": [
+    {
+      "path": "/api",
+      "target": "${BACKEND_URL}",
+      "options": {
+        "changeOrigin": true
+      }
+    },
+    {
+      "path": "/auth",
+      "target": "${OIDC_PROVIDER_URL}",
+      "options": {
+        "changeOrigin": true
+      }
+    }
+  ]
+}
+```
+
+Set the environment variables in your `.env` file:
+
+```env
+BACKEND_URL=https://api.example.com
+OIDC_PROVIDER_URL=https://auth.example.com
+```
+
+#### Proxy Options
+
+The `options` field supports all options from `http-proxy-middleware`. Common options include:
+
+- `changeOrigin` (boolean): Changes the origin of the host header to the target URL (default: true)
+- `pathRewrite` (object): Rewrites the path before forwarding to the target
+- `logLevel` (string): Logging level ('debug', 'info', 'warn', 'error', 'silent')
+- `onProxyReq` (function): Custom function to modify proxy request
+- `onProxyRes` (function): Custom function to modify proxy response
+
+Example with advanced options:
+
+```json
+{
+  "proxies": [
+    {
+      "path": "/api/v1",
+      "target": "https://backend.example.com",
+      "options": {
+        "changeOrigin": true,
+        "pathRewrite": {
+          "^/api/v1": "/api"
+        },
+        "logLevel": "debug"
+      }
+    }
+  ]
+}
+```
+
+#### How It Works
+
+1. Place `proxy.config.json` in your static directory (e.g., `public/proxy.config.json`)
+2. The proxy plugin loads automatically on server startup
+3. Proxies are registered **before** static files and other API routes
+4. Requests matching the proxy paths are forwarded to the target servers
+
+#### Example Use Cases
+
+**Proxying to a Backend API:**
+```json
+{
+  "proxies": [
+    {
+      "path": "/api",
+      "target": "http://localhost:8080",
+      "options": {
+        "changeOrigin": true
+      }
+    }
+  ]
+}
+```
+
+**Multiple Service Proxies:**
+```json
+{
+  "proxies": [
+    {
+      "path": "/auth",
+      "target": "https://auth.example.com"
+    },
+    {
+      "path": "/users",
+      "target": "https://users-service.example.com"
+    },
+    {
+      "path": "/orders",
+      "target": "https://orders-service.example.com"
+    }
+  ]
+}
+```
+
+**Path Rewriting:**
+```json
+{
+  "proxies": [
+    {
+      "path": "/api/v2",
+      "target": "https://backend.example.com",
+      "options": {
+        "changeOrigin": true,
+        "pathRewrite": {
+          "^/api/v2": "/v1"
+        }
+      }
+    }
+  ]
+}
+```
+
+### App Config Plugin
+
+The app config plugin (`app.config.ts`) serves application configuration from a JSON file with environment variable substitution support. See the plugin file for detailed documentation.
+
 ## Notes
 
 - Plugins are loaded in alphabetical order by filename
@@ -231,3 +397,4 @@ Just deploy the `dist/` directory along with `node_modules/` and `package.json`.
 - Make sure to handle errors within your endpoints
 - Use appropriate HTTP methods (GET, POST, PUT, DELETE, etc.)
 - Consider adding request validation for production use
+- Proxy configurations must be valid JSON with proper structure

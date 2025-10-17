@@ -11,6 +11,7 @@ A lightweight TypeScript-based Node.js and Express.js server for serving static 
 - 🌐 CORS enabled for development (unrestricted access)
 - 🎯 SPA (Single Page Application) support with client-side routing fallback
 - 🔌 Plugin system for custom API endpoints
+- 🔀 Configurable proxy support for backend APIs and authentication services
 
 ## Installation
 
@@ -78,12 +79,20 @@ STATIC_DIR=assets npm start
 
 ### CORS Configuration
 
-The server comes with CORS (Cross-Origin Resource Sharing) enabled by default, allowing unrestricted access from any origin. This is ideal for development environments where you might be running your frontend and backend on different ports.
+The server comes with CORS (Cross-Origin Resource Sharing) enabled by default with credentials support. This is ideal for development environments where you might be running your frontend and backend on different ports, and when using authentication tokens or cookies.
 
 **Current Setup (Development):**
-- Allows all origins (`Access-Control-Allow-Origin: *`)
-- Allows all HTTP methods (GET, POST, PUT, DELETE, etc.)
-- Allows all headers
+- Reflects the request origin (allows any origin dynamically)
+- **Credentials enabled** - supports cookies, authorization headers, and TLS client certificates
+- Allows common HTTP methods (GET, POST, PUT, DELETE, PATCH, OPTIONS)
+- Allows standard headers (Content-Type, Authorization, X-Requested-With)
+- Caches preflight OPTIONS requests for 10 minutes
+
+**Why Credentials are Important:**
+- Required when using cookies for authentication
+- Needed for Authorization headers to work properly with proxies
+- Essential for OIDC/OAuth flows
+- Allows CORS preflight (OPTIONS) requests to pass through
 
 **For Production:**
 
@@ -93,15 +102,25 @@ If you need to restrict CORS to specific origins in production, you can modify t
 // Restrict to specific origin
 app.use(cors({
   origin: 'https://yourdomain.com',
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
 }));
 
 // Or allow multiple specific origins
 app.use(cors({
   origin: ['https://yourdomain.com', 'https://www.yourdomain.com'],
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
+}));
+
+// For API-only servers (no credentials needed)
+app.use(cors({
+  origin: '*', // Only works when credentials: false
+  credentials: false
 }));
 ```
+
+**Note:** When `credentials: true` is set, you cannot use `origin: '*'`. The server uses `origin: true` which reflects the requesting origin, providing the same flexibility while supporting credentials.
 
 ## Project Structure
 
@@ -194,6 +213,86 @@ The plugin system works seamlessly in production:
 - Simply deploy the `dist/` directory with your plugins included
 
 For detailed documentation on creating plugins, see [src/api/README.md](src/api/README.md).
+
+### Proxy Configuration
+
+PicoServe includes built-in support for proxying requests to external services. This is particularly useful for:
+- Proxying authentication requests to OIDC providers
+- Forwarding API requests to backend services
+- Avoiding CORS issues in development
+- Routing requests to microservices
+
+#### Quick Start
+
+1. Create a `proxy.config.json` file in your static directory (e.g., `public/proxy.config.json`):
+
+```json
+{
+  "proxies": [
+    {
+      "path": "/auth",
+      "target": "https://your-oidc-provider.com",
+      "options": {
+        "changeOrigin": true
+      }
+    },
+    {
+      "path": "/api",
+      "target": "https://your-backend.com",
+      "options": {
+        "changeOrigin": true
+      }
+    }
+  ]
+}
+```
+
+2. Use environment variables for flexible configuration:
+
+```json
+{
+  "proxies": [
+    {
+      "path": "/api",
+      "target": "${BACKEND_URL}",
+      "options": {
+        "changeOrigin": true
+      }
+    }
+  ]
+}
+```
+
+Set the environment variables in your `.env` file:
+
+```env
+BACKEND_URL=https://api.example.com
+```
+
+3. Start the server - proxies are automatically configured!
+
+#### Example: Development Setup
+
+For a typical development setup with a separate backend API:
+
+**public/proxy.config.json:**
+```json
+{
+  "proxies": [
+    {
+      "path": "/api",
+      "target": "http://localhost:8080",
+      "options": {
+        "changeOrigin": true
+      }
+    }
+  ]
+}
+```
+
+Now all requests to `/api/*` will be proxied to your backend at `http://localhost:8080/api/*`.
+
+For more advanced proxy configurations including path rewriting, multiple proxies, and detailed options, see [src/api/README.md](src/api/README.md#proxy-configuration-plugin).
 
 ## Adding Static Files
 
