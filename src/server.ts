@@ -1,12 +1,16 @@
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import path from 'path';
+import { loadApiPlugins } from './api/loader';
 
 const app: Express = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
 
 // Enable CORS with unrestricted access for development
 app.use(cors());
+
+// Parse JSON bodies
+app.use(express.json());
 
 // Get static files directory from command line args or environment variable, default to 'public'
 const staticDir = process.argv[2] || process.env.STATIC_DIR || 'public';
@@ -22,10 +26,14 @@ app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// SPA fallback - serve index.html for all other routes
-// This allows client-side routing to work properly
-app.use((req: Request, res: Response) => {
-  res.sendFile(path.join(staticPath, 'index.html'));
+// Load API plugins
+const apiDir = path.join(__dirname, 'api');
+loadApiPlugins(app, apiDir).then(() => {
+  // SPA fallback - serve index.html for all other routes
+  // This allows client-side routing to work properly
+  app.use((req: Request, res: Response) => {
+    res.sendFile(path.join(staticPath, 'index.html'));
+  });
 });
 
 // Start the server

@@ -10,6 +10,7 @@ A lightweight TypeScript-based Node.js and Express.js server for serving static 
 - 🔧 Simple configuration with environment variables and command-line arguments
 - 🌐 CORS enabled for development (unrestricted access)
 - 🎯 SPA (Single Page Application) support with client-side routing fallback
+- 🔌 Plugin system for custom API endpoints
 
 ## Installation
 
@@ -107,7 +108,13 @@ app.use(cors({
 ```
 PicoServe/
 ├── src/
-│   └── server.ts       # Main server file
+│   ├── server.ts       # Main server file
+│   └── api/            # API plugins directory
+│       ├── loader.ts   # Plugin loader
+│       ├── types.ts    # Plugin type definitions
+│       ├── hello.ts    # Example plugin
+│       ├── example.ts  # Example plugin with multiple endpoints
+│       └── README.md   # API plugin documentation
 ├── public/             # Static files directory
 │   └── index.html      # Sample HTML file
 ├── dist/               # Compiled JavaScript (generated)
@@ -119,6 +126,34 @@ PicoServe/
 
 - `GET /` - Serves static files from the configured directory
 - `GET /health` - Health check endpoint
+- Custom API endpoints loaded from plugins (see below)
+
+## API Plugins
+
+PicoServe includes a plugin system that automatically loads custom API endpoints from the `src/api/` directory. This allows you to easily extend the server with your own backend logic without modifying the core server file.
+
+### Quick Start
+
+Create a new file in `src/api/` (e.g., `my-api.ts`):
+
+```typescript
+import { Express } from 'express';
+
+export default function (app: Express) {
+  app.get('/api/my-endpoint', (req, res) => {
+    res.json({ message: 'Hello from my API!' });
+  });
+}
+```
+
+The endpoint will be automatically discovered and registered on server startup!
+
+### Example Plugins Included
+
+- `/bff/hello` - Simple greeting endpoint
+- `/api/example` - Example CRUD endpoints with parameters
+
+For detailed documentation on creating plugins, see [src/api/README.md](src/api/README.md).
 
 ## Adding Static Files
 
