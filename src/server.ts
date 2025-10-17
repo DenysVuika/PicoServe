@@ -18,6 +18,12 @@ app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
+// SPA fallback - serve index.html for all other routes
+// This allows client-side routing to work properly
+app.use((req: Request, res: Response) => {
+  res.sendFile(path.join(staticPath, 'index.html'));
+});
+
 // Start the server
 const server = app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
