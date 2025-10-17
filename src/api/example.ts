@@ -1,10 +1,11 @@
 import { Express, Request, Response } from 'express';
+import { PluginConfig } from './types';
 
 /**
  * Example API plugin
  * Demonstrates how to create multiple endpoints in a single plugin
  */
-export default function (app: Express) {
+export default function (app: Express, _config: PluginConfig) {
   // Example GET endpoint
   app.get('/api/example', (req: Request, res: Response) => {
     res.json({ 

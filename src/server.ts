@@ -39,7 +39,12 @@ app.get('/health', (req: Request, res: Response) => {
 // Load API plugins BEFORE static files
 // This ensures custom routes take precedence over static files
 const apiDir = path.join(__dirname, 'api');
-loadApiPlugins(app, apiDir).then(() => {
+const pluginConfig = {
+  staticPath,
+  staticDir,
+  port: PORT
+};
+loadApiPlugins(app, apiDir, pluginConfig).then(() => {
   // Serve static files from the specified directory
   // Registered AFTER API plugins so custom routes have priority
   app.use(express.static(staticPath));

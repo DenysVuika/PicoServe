@@ -128,6 +128,8 @@ PicoServe/
 - `GET /health` - Health check endpoint
 - Custom API endpoints loaded from plugins (see below)
 
+**Note:** Custom API endpoints registered via plugins have **higher precedence** than static files. This means if you create a plugin that serves `/app.config.json`, it will take priority over any static file with the same name in your public directory.
+
 ## API Plugins
 
 PicoServe includes a plugin system that automatically loads custom API endpoints from the `src/api/` directory. This allows you to easily extend the server with your own backend logic without modifying the core server file.
@@ -138,15 +140,46 @@ Create a new file in `src/api/` (e.g., `my-api.ts`):
 
 ```typescript
 import { Express } from 'express';
+import { PluginConfig } from './types';
 
-export default function (app: Express) {
+export default function (app: Express, config: PluginConfig) {
   app.get('/api/my-endpoint', (req, res) => {
-    res.json({ message: 'Hello from my API!' });
+    res.json({
+      message: 'Hello from my API!',
+      staticPath: config.staticPath,
+      port: config.port
+    });
   });
 }
 ```
 
 The endpoint will be automatically discovered and registered on server startup!
+
+### Plugin Configuration
+
+All plugins receive a `config` object as the second parameter with access to server settings:
+
+```typescript
+interface PluginConfig {
+  staticPath: string;  // Absolute path to static files directory
+  staticDir: string;   // Original static directory argument
+  port: number;        // Server port
+  [key: string]: any;  // Custom config properties
+}
+```
+
+This allows your plugins to:
+- Access static files programmatically
+- Read server configuration
+- Share common settings across plugins
+
+If your plugin doesn't need the config, prefix the parameter with `_`:
+
+```typescript
+export default function (app: Express, _config: PluginConfig) {
+  // Plugin code that doesn't use config
+}
+```
 
 ### Example Plugins Included
 
