@@ -8,6 +8,8 @@ A lightweight TypeScript-based Node.js and Express.js server for serving static 
 - 📁 Serves static files from a configurable directory (defaults to `public`)
 - ⚡ Express.js-powered web server
 - 🔧 Simple configuration with environment variables and command-line arguments
+- 🌐 CORS enabled for development (unrestricted access)
+- 🎯 SPA (Single Page Application) support with client-side routing fallback
 
 ## Installation
 
@@ -72,6 +74,33 @@ STATIC_DIR=assets npm start
 ```
 
 3. **Default:** If not specified, the server uses the `public` directory
+
+### CORS Configuration
+
+The server comes with CORS (Cross-Origin Resource Sharing) enabled by default, allowing unrestricted access from any origin. This is ideal for development environments where you might be running your frontend and backend on different ports.
+
+**Current Setup (Development):**
+- Allows all origins (`Access-Control-Allow-Origin: *`)
+- Allows all HTTP methods (GET, POST, PUT, DELETE, etc.)
+- Allows all headers
+
+**For Production:**
+
+If you need to restrict CORS to specific origins in production, you can modify the `cors()` configuration in `src/server.ts`:
+
+```typescript
+// Restrict to specific origin
+app.use(cors({
+  origin: 'https://yourdomain.com',
+  credentials: true
+}));
+
+// Or allow multiple specific origins
+app.use(cors({
+  origin: ['https://yourdomain.com', 'https://www.yourdomain.com'],
+  credentials: true
+}));
+```
 
 ## Project Structure
 
