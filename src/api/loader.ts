@@ -1,13 +1,13 @@
 import { Express } from 'express';
 import { readdirSync } from 'fs';
 import { join } from 'path';
-import { ApiPlugin, PluginMetadata } from './types';
+import { ApiPlugin, PluginMetadata, PluginConfig } from './types';
 
 /**
  * Loads all API plugins from the api directory
  * Each plugin file should export a default function that registers routes
  */
-export async function loadApiPlugins(app: Express, apiDir: string): Promise<void> {
+export async function loadApiPlugins(app: Express, apiDir: string, config: PluginConfig): Promise<void> {
   console.log('Loading API plugins...');
   
   try {
@@ -44,8 +44,8 @@ export async function loadApiPlugins(app: Express, apiDir: string): Promise<void
           continue;
         }
 
-        // Register the plugin
-        await plugin(app);
+        // Register the plugin with config
+        await plugin(app, config);
         
         plugins.push({
           name: file.replace(/\.(js|ts)$/, ''),
