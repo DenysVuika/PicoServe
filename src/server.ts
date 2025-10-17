@@ -31,17 +31,19 @@ const staticPath = path.isAbsolute(staticDir)
   ? staticDir 
   : path.join(__dirname, '..', staticDir);
 
-// Serve static files from the specified directory
-app.use(express.static(staticPath));
-
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// Load API plugins
+// Load API plugins BEFORE static files
+// This ensures custom routes take precedence over static files
 const apiDir = path.join(__dirname, 'api');
 loadApiPlugins(app, apiDir).then(() => {
+  // Serve static files from the specified directory
+  // Registered AFTER API plugins so custom routes have priority
+  app.use(express.static(staticPath));
+
   // SPA fallback - serve index.html for all other routes
   // This allows client-side routing to work properly
   app.use((req: Request, res: Response) => {
