@@ -1,10 +1,23 @@
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import path from 'path';
+import rateLimit from 'express-rate-limit';
 import { loadApiPlugins } from './api/loader';
 
 const app: Express = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
+
+// Set up rate limiter: maximum of 100 requests per 15 minutes
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // max 100 requests per windowMs
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  message: 'Too many requests from this IP, please try again later.'
+});
+
+// Apply rate limiter to all requests
+app.use(limiter);
 
 // Enable CORS with unrestricted access for development
 app.use(cors());
