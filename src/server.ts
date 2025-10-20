@@ -4,6 +4,71 @@ import cors from 'cors';
 import path from 'path';
 import rateLimit from 'express-rate-limit';
 import { loadApiPlugins } from './api/loader';
+import { parseArgs } from 'node:util';
+
+/**
+ * Parse command line arguments
+ * Supports:
+ * -s, --static <dir>   : Static files directory (default: 'public')
+ * -p, --proxy <path>   : Path to proxy configuration file
+ * -h, --help           : Show help message
+ */
+function parseCommandLineArgs() {
+  try {
+    const { values } = parseArgs({
+      args: process.argv.slice(2),
+      options: {
+        static: {
+          type: 'string',
+          short: 's',
+        },
+        proxy: {
+          type: 'string',
+          short: 'p',
+        },
+        help: {
+          type: 'boolean',
+          short: 'h',
+        },
+      },
+      strict: true,
+    });
+
+    if (values.help) {
+      console.log(`
+PicoServe - Simple HTTP server with API plugin support
+
+Usage: node dist/server.js [options]
+
+Options:
+  -s, --static <dir>    Static files directory (default: 'public')
+  -p, --proxy <path>    Path to proxy configuration JSON file
+  -h, --help            Show this help message
+
+Environment Variables:
+  PORT                  Server port (default: 4200)
+  STATIC_DIR            Static files directory (overridden by -s)
+
+Examples:
+  node dist/server.js -s ./build
+  node dist/server.js -s ./public -p ./proxy.config.json
+  PORT=3000 node dist/server.js -s ./dist
+`);
+      process.exit(0);
+    }
+
+    return {
+      staticDir: values.static || process.env.STATIC_DIR || 'public',
+      proxyConfigPath: values.proxy || undefined,
+    };
+  } catch (error: any) {
+    console.error('Error parsing command line arguments:', error.message);
+    console.error('Use --help or -h to see available options');
+    process.exit(1);
+  }
+}
+
+const { staticDir, proxyConfigPath } = parseCommandLineArgs();
 
 const app: Express = express();
 const PORT = parseInt(process.env.PORT || '4200', 10);
@@ -33,8 +98,7 @@ app.use(cors({
 // Parse JSON bodies
 app.use(express.json());
 
-// Get static files directory from command line args or environment variable, default to 'public'
-const staticDir = process.argv[2] || process.env.STATIC_DIR || 'public';
+// Get static files directory from command line args
 const staticPath = path.isAbsolute(staticDir) 
   ? staticDir 
   : path.join(__dirname, '..', staticDir);
@@ -50,7 +114,8 @@ const apiDir = path.join(__dirname, 'api');
 const pluginConfig = {
   staticPath,
   staticDir,
-  port: PORT
+  port: PORT,
+  proxyConfigPath
 };
 loadApiPlugins(app, apiDir, pluginConfig).then(() => {
   // Serve static files from the specified directory

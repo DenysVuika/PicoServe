@@ -8,6 +8,7 @@ export interface PluginConfig {
   staticPath: string;
   staticDir: string;
   port: number;
+  proxyConfigPath?: string;
   [key: string]: any; // Allow additional custom config
 }
 
