@@ -47,7 +47,36 @@ The server will start on `http://localhost:4200` by default.
 
 ### Configuration
 
-You can configure the server using environment variables:
+You can configure the server using command-line parameters and environment variables.
+
+#### Command Line Parameters
+
+```bash
+node dist/server.js [options]
+
+Options:
+  -s, --static <dir>    Static files directory (default: 'public')
+  -p, --proxy <path>    Path to proxy configuration JSON file
+  -h, --help            Show help message
+```
+
+**Examples:**
+
+```bash
+# Serve from a different directory
+node dist/server.js -s ./build
+
+# Use custom proxy config
+node dist/server.js -p /path/to/proxy.config.json
+
+# Combine both options
+node dist/server.js -s ./dist -p ./config/proxy.json
+
+# With custom port
+PORT=3000 node dist/server.js -s ./public
+```
+
+#### Environment Variables
 
 **Port Configuration:**
 
@@ -57,31 +86,24 @@ PORT=8080 npm start
 
 **Static Files Directory:**
 
-You can specify a custom directory for static files in three ways:
-
-1. **Command-line argument (recommended for production):**
-
-```bash
-# Relative path
-node dist/server.js assets
-
-# Absolute path
-node dist/server.js /path/to/static/files
-```
-
-2. **Environment variable:**
-
 ```bash
 STATIC_DIR=assets npm start
 ```
 
-3. **Default:** If not specified, the server uses the `public` directory
+Note: Command-line parameters take precedence over environment variables.
+
+**Priority Order:**
+
+1. Command-line parameter (`-s` or `--static`)
+2. Environment variable (`STATIC_DIR`)
+3. Default: `public` directory
 
 ### CORS Configuration
 
 The server comes with CORS (Cross-Origin Resource Sharing) enabled by default with credentials support. This is ideal for development environments where you might be running your frontend and backend on different ports, and when using authentication tokens or cookies.
 
 **Current Setup (Development):**
+
 - Reflects the request origin (allows any origin dynamically)
 - **Credentials enabled** - supports cookies, authorization headers, and TLS client certificates
 - Allows common HTTP methods (GET, POST, PUT, DELETE, PATCH, OPTIONS)
@@ -89,6 +111,7 @@ The server comes with CORS (Cross-Origin Resource Sharing) enabled by default wi
 - Caches preflight OPTIONS requests for 10 minutes
 
 **Why Credentials are Important:**
+
 - Required when using cookies for authentication
 - Needed for Authorization headers to work properly with proxies
 - Essential for OIDC/OAuth flows
@@ -124,7 +147,7 @@ app.use(cors({
 
 ## Project Structure
 
-```
+```text
 PicoServe/
 ├── src/
 │   ├── server.ts        # Main server file
@@ -191,6 +214,7 @@ interface PluginConfig {
 ```
 
 This allows your plugins to:
+
 - Access static files programmatically
 - Read server configuration
 - Share common settings across plugins
@@ -211,6 +235,7 @@ export default function (app: Express, _config: PluginConfig) {
 ### Production Notes
 
 The plugin system works seamlessly in production:
+
 - When you run `npm run build`, all TypeScript files (including plugins) are compiled to JavaScript in the `dist/` directory
 - The loader automatically detects the environment and loads `.js` files in production, `.ts` files in development
 - Simply deploy the `dist/` directory with your plugins included
@@ -220,6 +245,7 @@ For detailed documentation on creating plugins, see [src/api/README.md](src/api/
 ### Proxy Configuration
 
 PicoServe includes built-in support for proxying requests to external services. This is particularly useful for:
+
 - Proxying authentication requests to OIDC providers
 - Forwarding API requests to backend services
 - Avoiding CORS issues in development
@@ -227,7 +253,11 @@ PicoServe includes built-in support for proxying requests to external services. 
 
 #### Quick Start
 
-1. Create a `proxy.config.json` file in your static directory (e.g., `public/proxy.config.json`):
+1. Create a `proxy.config.json` file. You can either:
+   - Place it in your static directory (e.g., `public/proxy.config.json`) - detected automatically
+   - Place it anywhere and specify the path with `-p` parameter (e.g., `node dist/server.js -p ./config/proxy.json`)
+
+**Example `proxy.config.json`:**
 
 ```json
 {
@@ -287,6 +317,7 @@ All proxy requests and responses are automatically logged to the console:
 ```
 
 This helps you:
+
 - Debug proxy configuration issues
 - Monitor API calls to backend services
 - Track authentication headers being forwarded
@@ -304,6 +335,7 @@ Error logging includes detailed information:
 For a typical development setup with a separate backend API:
 
 **public/proxy.config.json:**
+
 ```json
 {
   "proxies": [

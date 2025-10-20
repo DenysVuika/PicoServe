@@ -26,10 +26,12 @@ function substituteEnvVariables(content: string): string {
 /**
  * Loads proxy configuration from proxy.config.json file
  * @param staticPath - Path to the static directory
+ * @param customConfigPath - Optional custom path to proxy config file
  * @returns Array of proxy configurations or null if file doesn't exist
  */
-function loadProxyConfig(staticPath: string): ProxyConfig[] | null {
-  const configPath = join(staticPath, "proxy.config.json");
+function loadProxyConfig(staticPath: string, customConfigPath?: string): ProxyConfig[] | null {
+  // Use custom config path if provided, otherwise default to proxy.config.json in static directory
+  const configPath = customConfigPath || join(staticPath, "proxy.config.json");
 
   if (!existsSync(configPath)) {
     return null;
@@ -83,14 +85,20 @@ function loadProxyConfig(staticPath: string): ProxyConfig[] | null {
  * }
  */
 export default function (app: Express, config: PluginConfig) {
-  const proxies = loadProxyConfig(config.staticPath);
+  const proxies = loadProxyConfig(config.staticPath, config.proxyConfigPath);
 
   if (!proxies || proxies.length === 0) {
-    console.log("    - No proxy configuration found (proxy.config.json)");
+    const configLocation = config.proxyConfigPath 
+      ? config.proxyConfigPath 
+      : `${config.staticPath}/proxy.config.json`;
+    console.log(`    - No proxy configuration found (${configLocation})`);
     return;
   }
 
-  console.log("    - Setting up proxies:");
+  const configSource = config.proxyConfigPath 
+    ? `custom config: ${config.proxyConfigPath}` 
+    : 'proxy.config.json';
+  console.log(`    - Setting up proxies (${configSource}):`);
 
   for (const proxy of proxies) {
     if (!proxy.path || !proxy.target) {
