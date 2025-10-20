@@ -3,6 +3,7 @@ import { PluginConfig, ProxyConfig } from "./types";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import { readFileSync, existsSync } from "fs";
 import { join } from "path";
+import rateLimit from "express-rate-limit";
 
 /**
  * Substitutes environment variables in a string
@@ -117,6 +118,28 @@ export default function (app: Express, config: PluginConfig) {
     }
 
     try {
+      // Add rate limiting to prevent overwhelming the backend
+      // You can customize these values in your proxy.config.json
+      const rateLimitConfig = (proxy.options as any)?.rateLimit || {
+        windowMs: 60 * 1000, // 1 minute
+        max: 100, // limit each IP to 100 requests per windowMs
+      };
+
+      if (rateLimitConfig.enabled !== false) {
+        const limiter = rateLimit({
+          windowMs: rateLimitConfig.windowMs || 60 * 1000,
+          max: rateLimitConfig.max || 100,
+          message: {
+            error: "Too many requests",
+            message: `Please slow down. Maximum ${rateLimitConfig.max || 100} requests per ${(rateLimitConfig.windowMs || 60000) / 1000} seconds.`,
+          },
+          standardHeaders: true,
+          legacyHeaders: false,
+        });
+        
+        app.use(proxy.path, limiter);
+        console.log(`      ℹ Rate limit: ${rateLimitConfig.max || 100} req/${(rateLimitConfig.windowMs || 60000) / 1000}s for ${proxy.path}`);
+      }
       // Store custom callbacks from user config if they exist
       const customOptions = proxy.options as any;
       const customOnProxyReq = customOptions?.onProxyReq;

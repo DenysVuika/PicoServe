@@ -352,6 +352,49 @@ For a typical development setup with a separate backend API:
 
 Now all requests to `/api/*` will be proxied to your backend at `http://localhost:8080/api/*`.
 
+#### Rate Limiting
+
+PicoServe includes built-in rate limiting to prevent overwhelming backend services. Configure per-proxy limits:
+
+```json
+{
+  "proxies": [
+    {
+      "path": "/api",
+      "target": "https://your-backend.com",
+      "options": {
+        "changeOrigin": true,
+        "rateLimit": {
+          "windowMs": 60000,
+          "max": 100
+        }
+      }
+    }
+  ]
+}
+```
+
+**Options:**
+- `windowMs`: Time window in milliseconds (default: 60000 = 1 minute)
+- `max`: Maximum requests per window (default: 100)
+- `enabled`: Set to `false` to disable for a specific proxy
+
+**When you exceed the limit:**
+```json
+{
+  "error": "Too many requests",
+  "message": "Please slow down. Maximum 100 requests per 60 seconds."
+}
+```
+
+This helps you:
+- Avoid 429 (Too Many Requests) errors from backends
+- Control API usage costs
+- Prevent accidental request loops
+- Protect backend services from overload
+
+For a complete guide on handling rate limiting, see [RATE_LIMITING_GUIDE.md](RATE_LIMITING_GUIDE.md).
+
 For more advanced proxy configurations including path rewriting, multiple proxies, and detailed options, see [src/api/README.md](src/api/README.md#proxy-configuration-plugin).
 
 ## Adding Static Files

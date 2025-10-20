@@ -73,10 +73,12 @@ const { staticDir, proxyConfigPath } = parseCommandLineArgs();
 const app: Express = express();
 const PORT = parseInt(process.env.PORT || '4200', 10);
 
-// Set up rate limiter: maximum of 100 requests per 15 minutes
+// Set up global rate limiter for general server protection
+// This is a higher limit to catch abuse while allowing normal usage
+// Individual proxy paths have their own more specific rate limits
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // max 100 requests per windowMs
+  max: 1000, // max 1000 requests per windowMs (raised from 100)
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   message: 'Too many requests from this IP, please try again later.'

@@ -4,7 +4,11 @@
       "path": "/auth",
       "target": "https://your-oidc-provider.com",
       "options": {
-        "changeOrigin": true
+        "changeOrigin": true,
+        "rateLimit": {
+          "windowMs": 60000,
+          "max": 50
+        }
       }
     },
     {
@@ -14,6 +18,10 @@
         "changeOrigin": true,
         "pathRewrite": {
           "^/api": ""
+        },
+        "rateLimit": {
+          "windowMs": 60000,
+          "max": 100
         }
       }
     }
