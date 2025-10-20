@@ -427,6 +427,179 @@ Detailed error information helps diagnose connection issues:
 
 The app config plugin (`app.config.ts`) serves application configuration from a JSON file with environment variable substitution support. See the plugin file for detailed documentation.
 
+### Hello API Plugin with JWT Authentication
+
+The hello plugin (`hello.ts`) demonstrates how to implement JWT token authentication in your BFF endpoints. It provides two endpoints:
+
+- **GET /bff/hello** - A simple public endpoint that returns a greeting
+- **GET /bff/user-data** - An authenticated endpoint that extracts and displays user information from JWT tokens
+
+#### Features
+
+- **Optional JWT Verification**: Works in two modes:
+  - **Development Mode**: If OIDC environment variables are not configured, tokens are decoded without verification (useful for testing)
+  - **Production Mode**: If OIDC is configured, tokens are verified using JWKS (JSON Web Key Set)
+- **Username Extraction**: Attempts to extract username from multiple JWT claims (`username`, `email`, `preferred_username`, or `sub`)
+- **Token Caching**: JWKS keys are cached for 24 hours to improve performance
+- **Detailed Error Messages**: Returns helpful error messages for debugging
+
+#### Configuration
+
+To enable full JWT verification, set the following environment variables in your `.env` file:
+
+```env
+# OIDC JWT Configuration
+OIDC_JWKS_URI=https://your-oidc-provider.com/.well-known/jwks.json
+OIDC_ISSUER=https://your-oidc-provider.com
+OIDC_AUDIENCE=your-client-id
+```
+
+If these variables are not set, the endpoint will still work but will only decode tokens without cryptographic verification (suitable for development/testing only).
+
+#### Usage Example
+
+**Interactive Test Page:**
+
+A beautiful test UI is included at `/jwt-test.html` to help you test the JWT authentication endpoints visually:
+
+![JWT Test Page](../../docs/images/jwt.png)
+
+Visit `http://localhost:4200/jwt-test.html` in your browser to:
+- Test the public `/bff/hello` endpoint
+- Test the protected `/bff/user-data` endpoint with JWT tokens
+- Use the included sample token for quick testing
+- See real-time responses with syntax highlighting
+
+**Without Authentication (Public Endpoint):**
+```bash
+curl http://localhost:4200/bff/hello
+```
+
+Response:
+```json
+{
+  "message": "Hello from BFF!",
+  "timestamp": "2025-10-20T15:30:00.000Z"
+}
+```
+
+**With Authentication (Development Mode - No OIDC Config):**
+```bash
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  http://localhost:4200/bff/user-data
+```
+
+Response:
+```json
+{
+  "message": "Hello, john.doe!",
+  "data": "Custom data for john.doe",
+  "timestamp": "2025-10-20T15:30:00.000Z",
+  "note": "Token decoded without verification (OIDC not configured)"
+}
+```
+
+**With Authentication (Production Mode - OIDC Configured):**
+```bash
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  http://localhost:4200/bff/user-data
+```
+
+Response:
+```json
+{
+  "message": "Hello, john.doe!",
+  "data": "Custom data for john.doe",
+  "timestamp": "2025-10-20T15:30:00.000Z",
+  "tokenInfo": {
+    "issuer": "https://your-oidc-provider.com",
+    "subject": "user-123456",
+    "expiresAt": "2025-10-20T16:30:00.000Z"
+  }
+}
+```
+
+#### Creating Your Own JWT-Protected Endpoints
+
+You can use this pattern to create your own authenticated endpoints:
+
+```typescript
+import { Express, Request, Response } from 'express';
+import { PluginConfig } from './types';
+import jwt from 'jsonwebtoken';
+import jwksClient from 'jwks-rsa';
+
+export default function (app: Express, _config: PluginConfig) {
+  const jwksUri = process.env.OIDC_JWKS_URI;
+  const issuer = process.env.OIDC_ISSUER;
+  const audience = process.env.OIDC_AUDIENCE;
+
+  let client: jwksClient.JwksClient | null = null;
+
+  if (jwksUri) {
+    client = jwksClient({
+      jwksUri,
+      cache: true,
+      cacheMaxAge: 86400000, // 24 hours
+    });
+  }
+
+  function getKey(header: jwt.JwtHeader, callback: jwt.SigningKeyCallback) {
+    if (!client) {
+      callback(new Error('JWKS client not initialized'), undefined);
+      return;
+    }
+
+    client.getSigningKey(header.kid, (err, key) => {
+      if (err) {
+        callback(err, undefined);
+        return;
+      }
+      const signingKey = key?.getPublicKey();
+      callback(null, signingKey);
+    });
+  }
+
+  app.get('/bff/my-protected-endpoint', async (req: Request, res: Response) => {
+    const token = req.headers.authorization?.split(' ')[1];
+
+    if (!token) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+      const decoded = await new Promise<any>((resolve, reject) => {
+        jwt.verify(token, getKey, {
+          algorithms: ['RS256'],
+          issuer,
+          audience
+        }, (err, decoded) => {
+          if (err) reject(err);
+          else resolve(decoded);
+        });
+      });
+
+      const username = decoded.username || decoded.email || decoded.sub;
+
+      // Your custom logic here
+      res.json({
+        message: `Hello ${username}`,
+        customData: 'your data here'
+      });
+    } catch (err) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+  });
+}
+```
+
+#### Dependencies
+
+The JWT authentication requires the following packages (already included):
+- `jsonwebtoken` - JWT verification and decoding
+- `jwks-rsa` - JWKS client for fetching public keys
+- `@types/jsonwebtoken` - TypeScript types
+
 ## Notes
 
 - Plugins are loaded in alphabetical order by filename
