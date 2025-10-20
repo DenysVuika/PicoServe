@@ -393,7 +393,9 @@ This helps you:
 - Prevent accidental request loops
 - Protect backend services from overload
 
-For a complete guide on handling rate limiting, see [RATE_LIMITING_GUIDE.md](RATE_LIMITING_GUIDE.md).
+**Learn More:**
+- [RATE_LIMITING_GUIDE.md](RATE_LIMITING_GUIDE.md) - Complete guide on handling rate limiting
+- [RATE_LIMITING_ARCHITECTURE.md](RATE_LIMITING_ARCHITECTURE.md) - How the two-tier rate limiting system works
 
 For more advanced proxy configurations including path rewriting, multiple proxies, and detailed options, see [src/api/README.md](src/api/README.md#proxy-configuration-plugin).
 
