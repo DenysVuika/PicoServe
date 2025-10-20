@@ -12,6 +12,7 @@ A lightweight TypeScript-based Node.js and Express.js server for serving static 
 - 🎯 SPA (Single Page Application) support with client-side routing fallback
 - 🔌 Plugin system for custom API endpoints
 - 🔀 Configurable proxy support for backend APIs and authentication services
+- 🔐 JWT authentication example with JWKS verification support
 
 ## Installation
 
@@ -161,6 +162,7 @@ PicoServe/
 │       └── README.md    # API plugin documentation
 ├── public/              # Static files directory
 │   ├── index.html       # Sample HTML file
+│   ├── jwt-test.html    # JWT authentication test UI
 │   └── proxy.config.json # Proxy configuration (optional)
 ├── dist/                # Compiled JavaScript (generated)
 ├── tsconfig.json        # TypeScript configuration
@@ -229,8 +231,14 @@ export default function (app: Express, _config: PluginConfig) {
 
 ### Example Plugins Included
 
-- `/bff/hello` - Simple greeting endpoint
-- `/api/example` - Example CRUD endpoints with parameters
+- **`/bff/hello`** - Simple greeting endpoint (public, no auth)
+- **`/bff/user-data`** - JWT authentication example with JWKS support
+  - Demonstrates how to decode and verify JWT tokens
+  - Extracts username from token claims
+  - Works in dev mode (decode only) or production mode (full verification with OIDC)
+  - Includes interactive test page at `/jwt-test.html`
+  - See [JWT Authentication Guide](src/api/README.md#hello-api-plugin-with-jwt-authentication) for details
+- **`/api/example`** - Example CRUD endpoints with parameters
 
 ### Production Notes
 

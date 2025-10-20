@@ -458,9 +458,21 @@ If these variables are not set, the endpoint will still work but will only decod
 
 #### Usage Example
 
+**Interactive Test Page:**
+
+A beautiful test UI is included at `/jwt-test.html` to help you test the JWT authentication endpoints visually:
+
+![JWT Test Page](../../docs/images/jwt.png)
+
+Visit `http://localhost:4200/jwt-test.html` in your browser to:
+- Test the public `/bff/hello` endpoint
+- Test the protected `/bff/user-data` endpoint with JWT tokens
+- Use the included sample token for quick testing
+- See real-time responses with syntax highlighting
+
 **Without Authentication (Public Endpoint):**
 ```bash
-curl http://localhost:3000/bff/hello
+curl http://localhost:4200/bff/hello
 ```
 
 Response:
@@ -474,7 +486,7 @@ Response:
 **With Authentication (Development Mode - No OIDC Config):**
 ```bash
 curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  http://localhost:3000/bff/user-data
+  http://localhost:4200/bff/user-data
 ```
 
 Response:
@@ -490,7 +502,7 @@ Response:
 **With Authentication (Production Mode - OIDC Configured):**
 ```bash
 curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  http://localhost:3000/bff/user-data
+  http://localhost:4200/bff/user-data
 ```
 
 Response:
