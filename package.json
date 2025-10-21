@@ -1,6 +1,6 @@
 {
   "name": "@denysvuika/picoserve",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "TypeScript-based Node.js and Express.js server for serving static files",
   "main": "dist/server.js",
   "types": "dist/server.d.ts",
