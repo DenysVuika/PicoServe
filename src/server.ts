@@ -126,7 +126,11 @@ loadApiPlugins(app, apiDir, pluginConfig).then(() => {
 
   // SPA fallback - serve index.html for all other routes
   // This allows client-side routing to work properly
-  app.use((req: Request, res: Response) => {
+  const spaRateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+  });
+  app.use(spaRateLimiter, (req: Request, res: Response) => {
     res.sendFile(path.join(staticPath, 'index.html'));
   });
 });
