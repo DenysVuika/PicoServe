@@ -1,26 +1,45 @@
 {
-  "name": "picoserve",
-  "version": "1.0.0",
+  "name": "@denysvuika/picoserve",
+  "version": "0.1.0",
   "description": "TypeScript-based Node.js and Express.js server for serving static files",
   "main": "dist/server.js",
+  "types": "dist/server.d.ts",
   "bin": {
     "psrv": "dist/server.js"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "start": "node --env-file=.env dist/server.js",
     "dev": "node --env-file=.env -r ts-node/register --watch src/server.ts",
     "lint": "oxlint src",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "express",
     "static-files",
     "server",
-    "typescript"
+    "typescript",
+    "jwt",
+    "rate-limiting",
+    "proxy",
+    "api"
   ],
   "author": "",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DenysVuika/PicoServe.git"
+  },
+  "bugs": {
+    "url": "https://github.com/DenysVuika/PicoServe/issues"
+  },
+  "homepage": "https://github.com/DenysVuika/PicoServe#readme",
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^5.1.0",
