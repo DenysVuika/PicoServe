@@ -14,46 +14,72 @@ A lightweight TypeScript-based Node.js and Express.js server for serving static 
 - 🔀 Configurable proxy support for backend APIs and authentication services
 - 🔐 JWT authentication example with JWKS verification support
 
-## Installation
+## Quick Start
+
+Get started in seconds with npx:
 
 ```bash
-npm install
+npx @denysvuika/picoserve
+```
+
+This will serve files from your current directory's `public` folder on `http://localhost:4200`.
+
+## Installation
+
+### Using npx (No Installation Required)
+
+Run PicoServe instantly without installing:
+
+```bash
+npx @denysvuika/picoserve
+```
+
+### Global Installation
+
+Install globally to use the `psrv` command anywhere:
+
+```bash
+npm install -g @denysvuika/picoserve
+```
+
+Then run:
+
+```bash
+psrv
+```
+
+### Local Installation
+
+Install as a project dependency:
+
+```bash
+npm install @denysvuika/picoserve
+```
+
+Add to your `package.json` scripts:
+
+```json
+{
+  "scripts": {
+    "serve": "psrv"
+  }
+}
+```
+
+Then run:
+
+```bash
+npm run serve
 ```
 
 ## Usage
 
-### Development Mode
-
-Run the server in development mode with TypeScript directly:
-
-```bash
-npm run dev
-```
-
-### Production Mode
-
-1. Build the TypeScript code:
-
-```bash
-npm run build
-```
-
-2. Start the server:
-
-```bash
-npm start
-```
-
 The server will start on `http://localhost:4200` by default.
 
-### Configuration
-
-You can configure the server using command-line parameters and environment variables.
-
-#### Command Line Parameters
+### Command Line Options
 
 ```bash
-node dist/server.js [options]
+psrv [options]
 
 Options:
   -s, --static <dir>    Static files directory (default: 'public')
@@ -65,16 +91,16 @@ Options:
 
 ```bash
 # Serve from a different directory
-node dist/server.js -s ./build
+psrv -s ./build
 
 # Use custom proxy config
-node dist/server.js -p /path/to/proxy.config.json
+psrv -p /path/to/proxy.config.json
 
 # Combine both options
-node dist/server.js -s ./dist -p ./config/proxy.json
+psrv -s ./dist -p ./config/proxy.json
 
 # With custom port
-PORT=3000 node dist/server.js -s ./public
+PORT=3000 psrv -s ./public
 ```
 
 #### Environment Variables
@@ -145,29 +171,6 @@ app.use(cors({
 ```
 
 **Note:** When `credentials: true` is set, you cannot use `origin: '*'`. The server uses `origin: true` which reflects the requesting origin, providing the same flexibility while supporting credentials.
-
-## Project Structure
-
-```text
-PicoServe/
-├── src/
-│   ├── server.ts        # Main server file
-│   └── api/             # API plugins directory
-│       ├── loader.ts    # Plugin loader
-│       ├── types.ts     # Plugin type definitions
-│       ├── proxy.ts     # Proxy configuration plugin
-│       ├── app.config.ts # App configuration plugin
-│       ├── hello.ts     # Example plugin
-│       ├── example.ts   # Example plugin with multiple endpoints
-│       └── README.md    # API plugin documentation
-├── public/              # Static files directory
-│   ├── index.html       # Sample HTML file
-│   ├── jwt-test.html    # JWT authentication test UI
-│   └── proxy.config.json # Proxy configuration (optional)
-├── dist/                # Compiled JavaScript (generated)
-├── tsconfig.json        # TypeScript configuration
-└── package.json         # Project dependencies
-```
 
 ## Endpoints
 
@@ -410,6 +413,66 @@ For more advanced proxy configurations including path rewriting, multiple proxie
 ## Adding Static Files
 
 Simply place your static files (HTML, CSS, JavaScript, images, etc.) in your configured static directory (defaults to `public`), and they will be served automatically.
+
+## Contributing
+
+### Development Setup
+
+If you want to contribute to PicoServe or modify it for your needs:
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/DenysVuika/PicoServe.git
+cd PicoServe
+```
+
+2. Install dependencies:
+
+```bash
+npm install
+```
+
+3. Run in development mode:
+
+```bash
+npm run dev
+```
+
+4. Build the project:
+
+```bash
+npm run build
+```
+
+5. Test the built version:
+
+```bash
+npm start
+```
+
+### Project Structure
+
+```text
+PicoServe/
+├── src/
+│   ├── server.ts        # Main server file
+│   └── api/             # API plugins directory
+│       ├── loader.ts    # Plugin loader
+│       ├── types.ts     # Plugin type definitions
+│       ├── proxy.ts     # Proxy configuration plugin
+│       ├── app.config.ts # App configuration plugin
+│       ├── hello.ts     # Example plugin
+│       ├── example.ts   # Example plugin with multiple endpoints
+│       └── README.md    # API plugin documentation
+├── public/              # Static files directory
+│   ├── index.html       # Sample HTML file
+│   ├── jwt-test.html    # JWT authentication test UI
+│   └── proxy.config.json # Proxy configuration (optional)
+├── dist/                # Compiled JavaScript (generated)
+├── tsconfig.json        # TypeScript configuration
+└── package.json         # Project dependencies
+```
 
 ## License
 
