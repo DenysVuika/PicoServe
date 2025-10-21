@@ -2,6 +2,7 @@
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import path from 'path';
+import fs from 'fs';
 import rateLimit from 'express-rate-limit';
 import { loadApiPlugins } from './api/loader';
 import { parseArgs } from 'node:util';
@@ -101,9 +102,76 @@ app.use(cors({
 app.use(express.json());
 
 // Get static files directory from command line args
-const staticPath = path.isAbsolute(staticDir) 
+// First try user's local directory, then fall back to bundled public folder
+const userStaticPath = path.isAbsolute(staticDir) 
   ? staticDir 
-  : path.join(__dirname, '..', staticDir);
+  : path.join(process.cwd(), staticDir);
+
+const bundledPublicPath = path.join(__dirname, '..', 'public');
+
+let staticPath: string;
+
+// Check if user's static directory exists
+if (fs.existsSync(userStaticPath)) {
+  staticPath = userStaticPath;
+  console.log(`Using local static directory: ${staticDir}`);
+} else if (fs.existsSync(bundledPublicPath)) {
+  // Fall back to bundled public directory
+  staticPath = bundledPublicPath;
+  console.log(`⚠️  Local '${staticDir}' directory not found.`);
+  console.log(`   Using bundled default files from package.`);
+  console.log(`   💡 Tip: Create a '${staticDir}' directory in your current location to serve your own files.`);
+} else {
+  // Last resort: create an empty directory
+  staticPath = userStaticPath;
+  console.warn(`⚠️  Warning: Static directory '${staticDir}' does not exist.`);
+  console.warn(`   Creating directory: ${staticPath}`);
+  fs.mkdirSync(staticPath, { recursive: true });
+  
+  // Create a simple index.html file
+  const indexPath = path.join(staticPath, 'index.html');
+  const defaultHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PicoServe</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    h1 { color: #333; }
+    code {
+      background: #f4f4f4;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+    .success { color: #28a745; }
+  </style>
+</head>
+<body>
+  <h1>🎉 PicoServe is running!</h1>
+  <p class="success">Your server is up and running successfully.</p>
+  <p>Add your static files (HTML, CSS, JS, images, etc.) to the <code>${staticDir}</code> directory to get started.</p>
+  <h2>Quick Start:</h2>
+  <ol>
+    <li>Create your <code>index.html</code> file in the <code>${staticDir}</code> directory</li>
+    <li>Add any other assets you need</li>
+    <li>Refresh this page to see your content</li>
+  </ol>
+  <h2>Available Endpoints:</h2>
+  <ul>
+    <li><a href="/health">/health</a> - Health check endpoint</li>
+  </ul>
+</body>
+</html>`;
+  fs.writeFileSync(indexPath, defaultHtml);
+  console.log(`   Created default index.html`);
+}
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
@@ -127,7 +195,16 @@ loadApiPlugins(app, apiDir, pluginConfig).then(() => {
   // SPA fallback - serve index.html for all other routes
   // This allows client-side routing to work properly
   app.use((req: Request, res: Response) => {
-    res.sendFile(path.join(staticPath, 'index.html'));
+    const indexPath = path.join(staticPath, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      res.status(404).json({
+        error: 'Not Found',
+        message: `The requested resource was not found. Make sure your static files are in the '${staticDir}' directory.`,
+        path: req.path
+      });
+    }
   });
 });
 
