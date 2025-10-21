@@ -89,7 +89,7 @@ app.use(limiter);  // Applied globally
 
 ### Proxy-Specific Limiters (Per Proxy)
 
-**File:** `.tmp/proxy.config.json` (or your proxy config)
+**File:** `public/proxy.config.json` (or your proxy config)
 
 ```json
 {
@@ -118,12 +118,14 @@ The proxy limiter is **more restrictive** for proxy endpoints, which is correct!
 ## Why Two Limiters?
 
 ### Global Limiter (server.ts)
+
 - ✅ Protects your server infrastructure
 - ✅ Catches attackers trying to overwhelm any endpoint
 - ✅ Prevents abuse of static files, health checks, etc.
 - ✅ Higher limit allows normal usage
 
 ### Proxy Limiter (proxy.ts)
+
 - ✅ Protects backend services from overload
 - ✅ Respects backend's rate limits
 - ✅ Configurable per backend service
@@ -134,20 +136,23 @@ The proxy limiter is **more restrictive** for proxy endpoints, which is correct!
 
 **User making 100 requests in 1 minute:**
 
-### To `/health` endpoint:
-```
+### To `/health` endpoint
+
+```text
 ✓ Global: 100/1000 requests (passes)
 → Success! No proxy limiter applies
 ```
 
-### To `/deployment-service`:
-```
+### To `/deployment-service`
+
+```text
 ✗ Proxy: 31/30 requests (FAILS after 30 requests)
 → 429 Error: "Please slow down. Maximum 30 requests per 60 seconds"
 ```
 
-### To mixed endpoints (50 to `/health`, 25 to each proxy):
-```
+### To mixed endpoints (50 to `/health`, 25 to each proxy)
+
+```text
 ✓ Global: 100/1000 requests (passes)
 ✓ Proxy 1: 25/30 requests (passes)
 ✓ Proxy 2: 25/30 requests (passes)
@@ -168,6 +173,7 @@ The proxy limiter is **more restrictive** for proxy endpoints, which is correct!
    - Proxy errors: Edit your `proxy.config.json`
 
 3. **Lower the proxy limit** (recommended):
+
    ```json
    "rateLimit": {
      "max": 20  // Even more conservative
@@ -177,6 +183,7 @@ The proxy limiter is **more restrictive** for proxy endpoints, which is correct!
 ### If Limits Are Too Restrictive
 
 1. **Raise proxy limits:**
+
    ```json
    "rateLimit": {
      "max": 50,
@@ -185,6 +192,7 @@ The proxy limiter is **more restrictive** for proxy endpoints, which is correct!
    ```
 
 2. **Or increase the window:**
+
    ```json
    "rateLimit": {
      "max": 60,
@@ -203,6 +211,7 @@ The proxy limiter is **more restrictive** for proxy endpoints, which is correct!
 ## Example Configurations
 
 ### High-Traffic Public API
+
 ```typescript
 // server.ts - Global
 max: 5000, windowMs: 15 * 60 * 1000
@@ -212,6 +221,7 @@ max: 5000, windowMs: 15 * 60 * 1000
 ```
 
 ### Low-Traffic Internal Tool
+
 ```typescript
 // server.ts - Global
 max: 500, windowMs: 15 * 60 * 1000
@@ -221,6 +231,7 @@ max: 500, windowMs: 15 * 60 * 1000
 ```
 
 ### Development/Testing
+
 ```typescript
 // server.ts - Global
 max: 10000, windowMs: 15 * 60 * 1000
@@ -234,15 +245,17 @@ max: 10000, windowMs: 15 * 60 * 1000
 ### Check Current Limits
 
 **Server startup logs:**
-```
+
+```text
 Server is running on http://localhost:4200
-- Setting up proxies (custom config: .tmp/proxy.config.json):
+- Setting up proxies (custom config: public/proxy.config.json):
   ℹ Rate limit: 30 req/60s for /deployment-service
   ✓ /deployment-service → https://backend.example.com
 ```
 
 **Response headers:**
-```
+
+```text
 RateLimit-Limit: 30
 RateLimit-Remaining: 25
 RateLimit-Reset: 1729445678
@@ -261,7 +274,7 @@ RateLimit-Reset: 1729445678
 
 **Issue:** Rate limiting too aggressive in development
 **Solution:** Disable proxy rate limiting:
+
 ```json
 "rateLimit": { "enabled": false }
 ```
-
